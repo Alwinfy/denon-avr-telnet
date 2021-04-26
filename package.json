@@ -1,0 +1,22 @@
+{
+  "name": "denon-avr-telnet",
+  "version": "0.1.0",
+  "description": "Node API for the Denon AVR Telnet interface",
+  "main": "index.js",
+  "dependencies": {
+    "@types/node": "^14.14.41",
+    "telnet-client": "^1.4.9"
+  },
+  "devDependencies": {
+    "eslint": "^7.25.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alwinfy/denon-avr-telnet"
+  },
+  "author": "Alwinfy",
+  "license": "MIT"
+}
