@@ -5,6 +5,13 @@ const Telnet = require("telnet-client");
 
 const dispatchTable = require("./dispatch");
 
+const aliases = {
+	"MU": "Mute",
+	"PW": "Power",
+	"SI": "Input",
+	"MV": "Volume",
+};
+
 class DenonAvrTelnet extends EventEmitter {
 	/**
 	 * @param {string} host the host to be connected to
@@ -31,6 +38,7 @@ class DenonAvrTelnet extends EventEmitter {
 		this.queues = {};
 		this.dispatchTable = dispatchTable;
 		this.client.on("data", buffer => this.onData(buffer));
+		this.setupSugar();
 	}
 
 	async query(type, query) {
@@ -123,15 +131,17 @@ class DenonAvrTelnet extends EventEmitter {
 		return this.query(prefix, "?");
 	}
 
-	setMute(val) { return this.set("MU", val); }
-	getMute() { return this.get("MU"); }
-	setPower(val) { return this.set("PW", val); }
-	getPower() { return this.get("PW"); }
-	setInput(val) { return this.set("SI", val); }
-	getInput() { return this.get("SI"); }
-	setVolume(val) { return this.set("MV", +val); }
-	setVolumeRelative(val) { return this.set("MV", !!val); }
-	getVolume() { return this.get("MV"); }
+	setupSugar() {
+		for (const key in this.aliases) {
+			const suffix = this.aliases[key];
+			const eventName = suffix.toLowerCase() + "Changed";
+			this["set" + name] = val => this.set(key, val);
+			this["get" + name] = () => this.get(key);
+			this.on(key, val => this.emit(eventName, val));
+		}
+		this.setVolumeRelative = (val) => this.set("MV", !!val);
+	}
 	// TODO: Add more sugary hooks for indiv. things (or automate hook addition?)
 }
+
 module.exports = DenonAvrTelnet;
