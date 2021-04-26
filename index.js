@@ -84,12 +84,14 @@ class DenonAvrTelnet extends EventEmitter {
 		let pretty = null, error = null;
 		try {
 			pretty = transformer.from(body);
+			if (pretty !== null) {
+				this.emit(prefix, pretty);
+			}
 		} catch (e) {
 			error = e;
 			this.emit("error", error);
 		}
-		if (pretty !== null) {
-			this.emit(prefix, pretty);
+		if (pretty !== null || error) {
 			const queue = this.queues[prefix];
 			if (!(queue && this.dispatchQueued(queue, pretty, error)) && !error) {
 				this.emit("async", prefix, pretty);
