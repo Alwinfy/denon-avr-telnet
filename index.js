@@ -69,7 +69,8 @@ class DenonAvrTelnet extends EventEmitter {
 			return;
 		}
 		const body = line.substring(2);
-		this.emit("raw-" + prefix, body);
+		this.emit("raw", prefix, body);
+		this.emit("raw:" + prefix, body);
 
 		// TODO: Clean this part of the error handling up somehow
 		let pretty = null, error = null;
@@ -82,7 +83,8 @@ class DenonAvrTelnet extends EventEmitter {
 		}
 		const queue = this.queues[prefix];
 		if (!(queue && this.dispatchQueued(queue, pretty, error)) && !error) {
-			this.emit("async-" + prefix, pretty);
+			this.emit("async", prefix, pretty);
+			this.emit("async:" + prefix, pretty);
 		}
 	}
 
