@@ -74,7 +74,7 @@ class DenonAvrTelnet extends EventEmitter {
 		// TODO: Clean this part of the error handling up somehow
 		let pretty = null, error = null;
 		try {
-			pretty = transformer(body);
+			pretty = transformer.into(body);
 			this.emit(prefix, pretty);
 		} catch (e) {
 			error = e;
