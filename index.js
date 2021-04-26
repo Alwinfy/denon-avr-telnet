@@ -3,21 +3,7 @@
 const {EventEmitter} = require("events");
 const Telnet = require("telnet-client");
 
-// TODO: Move this into its own module
-const dispatchTable = {
-	"PW": {
-		into(bool) {
-			return bool ? "ON" : "STANDBY";
-		},
-		from(string) {
-			switch (string) {
-			case "ON": return true;
-			case "STANDBY": return false;
-			default: throw new Error(`Expected ON or STANDBY from PW, got ${string}`);
-			}
-		}
-	}
-};
+const dispatchTable = require("./dispatch");
 
 class DenonAvrTelnet extends EventEmitter {
 	/**
@@ -34,6 +20,9 @@ class DenonAvrTelnet extends EventEmitter {
 			.connect({
 				host,
 				port: port || 23,
+				timeout: 1000,
+				sendTimeout: 1200,
+				negotiationMandatory: false,
 				// timeout: timeout === undefined ? 5000 : timeout,
 				irs: "\r",
 				ors: "\r"
@@ -70,20 +59,22 @@ class DenonAvrTelnet extends EventEmitter {
 		data.forEach(line => this.parseResponse(line));
 	}
 	parseResponse(line) {
-		if (!line) {
+		if (line.length < 2) {
 			return;
 		}
-		if (line.length < 2) {
-			this.emit("error", "Got bad response from server: " + line);
-		}
 		const prefix = line.substring(0, 2).toUpperCase();
+		// ignore unknown opcodes
+		const transformer = this.dispatchTable[prefix];
+		if (!transformer) {
+			return;
+		}
 		const body = line.substring(2);
 		this.emit("raw-" + prefix, body);
 
 		// TODO: Clean this part of the error handling up somehow
 		let pretty = null, error = null;
 		try {
-			pretty = this.prettify(prefix, body);
+			pretty = transformer(body);
 			this.emit(prefix, pretty);
 		} catch (e) {
 			error = e;
@@ -93,11 +84,6 @@ class DenonAvrTelnet extends EventEmitter {
 		if (!(queue && this.dispatchQueued(queue, pretty, error)) && !error) {
 			this.emit("async-" + prefix, pretty);
 		}
-	}
-
-	prettify(prefix, body) {
-		const transformer = this.dispatchTable[prefix];
-		return transformer ? transformer.from(body) : body;
 	}
 
 	/** @returns {boolean} whether the dispatch succeeded */
@@ -135,6 +121,15 @@ class DenonAvrTelnet extends EventEmitter {
 		return this.query(prefix, "?");
 	}
 
-	// TODO: Add more sugary hooks for indiv. things
+	setMute(val) { return this.set("MU", val); }
+	getMute() { return this.get("MU"); }
+	setPower(val) { return this.set("PW", val); }
+	getPower() { return this.get("PW"); }
+	setInput(val) { return this.set("SI", val); }
+	getInput() { return this.get("SI"); }
+	setVolume(val) { return this.set("MV", +val); }
+	setVolumeRelative(val) { return this.set("MV", !!val); }
+	getVolume() { return this.get("MV"); }
+	// TODO: Add more sugary hooks for indiv. things (or automate hook addition?)
 }
 module.exports = DenonAvrTelnet;
