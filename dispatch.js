@@ -43,7 +43,7 @@ module.exports = {
 		},
 		from(string) {
 			if (string.startsWith("MAX ") || string.startsWith("MIN ")) {
-				string = string.substring(4);
+				return null;
 			}
 			const overflow = string.startsWith("99");
 			const value = +(string.length == 2 ? string + "0" : string);
