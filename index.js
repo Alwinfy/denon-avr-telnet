@@ -132,11 +132,11 @@ class DenonAvrTelnet extends EventEmitter {
 	}
 
 	setupSugar() {
-		for (const key in this.aliases) {
-			const suffix = this.aliases[key];
+		for (const key in aliases) {
+			const suffix = aliases[key];
 			const eventName = suffix.toLowerCase() + "Changed";
-			this["set" + name] = val => this.set(key, val);
-			this["get" + name] = () => this.get(key);
+			this["set" + suffix] = val => this.set(key, val);
+			this["get" + suffix] = () => this.get(key);
 			this.on(key, val => this.emit(eventName, val));
 		}
 		this.setVolumeRelative = (val) => this.set("MV", !!val);
