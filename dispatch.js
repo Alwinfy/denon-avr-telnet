@@ -42,6 +42,9 @@ module.exports = {
 			throw new Error(`Expected to get boolean or integer or half-integer in range -80.5 to +1.0, got ${value}`);
 		},
 		from(string) {
+			if (string.startsWith("MAX ") || string.startsWith("MIN ")) {
+				string = string.substring(4);
+			}
 			const overflow = string.startsWith("99");
 			const value = +(string.length == 2 ? string + "0" : string);
 			if (isNaN(value)) {
