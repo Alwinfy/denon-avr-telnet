@@ -59,17 +59,17 @@ class DenonAvrTelnet extends EventEmitter {
 		data.forEach(line => this.parseResponse(line));
 	}
 	parseResponse(line) {
+		this.emit("raw", line);
 		if (line.length < 2) {
 			return;
 		}
 		const prefix = line.substring(0, 2).toUpperCase();
-		const body = line.substring(2);
-		this.emit("raw", prefix, body);
 		// ignore unknown opcodes
 		const transformer = this.dispatchTable[prefix];
 		if (!transformer) {
 			return;
 		}
+		const body = line.substring(2);
 		this.emit("raw:" + prefix, body);
 
 		// TODO: Clean this part of the error handling up somehow
