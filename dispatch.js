@@ -13,9 +13,9 @@ const makeBoolean = (truthy, falsey) => ({
 	}
 });
 
-const SI_TYPES = "PHONO CD TUNER DVD BD TV SAT/CBL DVR GAME GAME2 V.AUX DOCK HDRADIO IPOD NET/USB RHAPSODY NAPSTER PANDORA LASTFM FLICKR FAVORITES IRADIO SERVER USB/IPOD USB IPD FVP".split(" ");
+const SI_TYPES = "PHONO CD TUNER DVD BD TV SAT/CBL CBL/SAT DVR GAME GAME2 V.AUX AUX1 MPLAY DOCK HDRADIO IPOD NET/USB RHAPSODY RHAPSODY NAPSTER PANDORA LASTFM FLICKR FAVORITES IRADIO SERVER USB/IPOD USB IPD FVP IRP NETWORK SPOTIFY".split(" ");
 
-module.exports = {
+const dispatchTable = {
 	"PW": makeBoolean("ON", "STANDBY"),
 	"MU": makeBoolean("ON", "OFF"),
 	"SI": {
@@ -56,3 +56,5 @@ module.exports = {
 	},
 	
 };
+
+module.exports = {SI_TYPES, dispatchTable};

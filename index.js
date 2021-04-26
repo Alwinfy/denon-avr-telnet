@@ -3,7 +3,7 @@
 const {EventEmitter} = require("events");
 const Telnet = require("telnet-client");
 
-const dispatchTable = require("./dispatch");
+const {SI_TYPES, dispatchTable} = require("./dispatch");
 
 const aliases = {
 	"MU": "Mute",
@@ -146,4 +146,4 @@ class DenonAvrTelnet extends EventEmitter {
 	// TODO: Add more sugary hooks for indiv. things (or automate hook addition?)
 }
 
-module.exports = DenonAvrTelnet;
+module.exports = {DenonAvrTelnet, SI_TYPES};
