@@ -12,6 +12,22 @@ const aliases = {
 	"MV": "Volume",
 };
 
+const onceify = fun => (res, rej) => {
+	const ores = resolution => {
+		if (fun) {
+			fun = null;
+			res(resolution);
+		}
+	};
+	const orej = error => {
+		if (fun) {
+			fun = null;
+			rej(error);
+		}
+	};
+	return fun(ores, orej);
+};
+
 class DenonAvrTelnet extends EventEmitter {
 	/**
 	 * @param {string} host the host to be connected to
@@ -45,31 +61,36 @@ class DenonAvrTelnet extends EventEmitter {
 
 	async query(type, query) {
 		const queue = this.queues[type] = this.queues[type] || [];
-		await this.rawQuery(type, query);
 		return new Promise((resolve, reject) => {
 			// TODO: Find a somewhat less hacky way to do this?
 			const entry = {pending: true, resolve, reject};
 			queue.push(entry);
-			if (this.timeout) {
-				setTimeout(() => {
-					reject("Process timed out");
-					entry.pending = false;
-				}, this.timeout);
-			}
-		}).finally(() => this.sendNext());
+			this.rawQuery(type, query).then(() => {
+				if (this.timeout) {
+					setTimeout(() => {
+						reject("Process timed out");
+						entry.pending = false;
+					}, this.timeout);
+				}
+			});
+		});
 	}
 	rawQuery(type, query) {
 		return new Promise((resolve, reject) => {
 			this.inQueue.push({body: type + query, resolve, reject});
-			if (this.inQueue.length == 1) {
+			if (this.inQueue.length === 1) {
 				this.sendNext();
 			}
 		});
 	}
 	sendNext() {
+		const request = this.inQueue[0];
+		this.client.send(request.body).then(request.resolve).catch(request.reject);
+	}
+	finishNext() {
+		this.inQueue.shift();
 		if (this.inQueue.length) {
-			const request = this.inQueue.shift();
-			this.client.send(request.body).then(request.resolve).catch(request.reject);
+			this.sendNext();
 		}
 	}
 
@@ -141,11 +162,11 @@ class DenonAvrTelnet extends EventEmitter {
 		return this.setRaw(prefix, transformer.into(value));
 	}
 	setRaw(prefix, value) {
-		return this.rawQuery(prefix, value).finally(() => this.sendNext());
+		return this.rawQuery(prefix, value).finally(() => this.finishNext());
 	}
 
 	get(prefix) {
-		return this.query(prefix, "?");
+		return this.query(prefix, "?").finally(() => this.finishNext());
 	}
 
 	setupSugar() {
