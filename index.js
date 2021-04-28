@@ -18,7 +18,7 @@ class DenonAvrTelnet extends EventEmitter {
 	 * @param {object?} options additional options to pass to the underlying telnet client (see telnet-client doc for options)
 	 * @param {number?} timeout the timeout on requests; set to 0 to disable
 	 */
-	constructor(host, options, timeout=5000) {
+	constructor(host, options, timeout=200) {
 		super();
 		this.client = new Telnet();
 		this.partial = "";
@@ -29,13 +29,14 @@ class DenonAvrTelnet extends EventEmitter {
 				port: 23,
 				timeout: 1000,
 				sendTimeout: 1200,
-				negotiationMandatory: false,
 				// timeout: timeout === undefined ? 5000 : timeout,
+				...(options || {}),
+				negotiationMandatory: false,
 				irs: "\r",
 				ors: "\r",
-				...(options || {})
 			})
 			.then(() => this.emit("connected"));
+		this.inQueue = [];
 		this.queues = {};
 		this.dispatchTable = dispatchTable;
 		this.client.on("data", buffer => this.onData(buffer));
@@ -55,10 +56,21 @@ class DenonAvrTelnet extends EventEmitter {
 					entry.pending = false;
 				}, this.timeout);
 			}
-		});
+		}).finally(() => this.sendNext());
 	}
 	rawQuery(type, query) {
-		return this.client.send(type + query);
+		return new Promise((resolve, reject) => {
+			this.inQueue.push({body: type + query, resolve, reject});
+			if (this.inQueue.length == 1) {
+				this.sendNext();
+			}
+		});
+	}
+	sendNext() {
+		if (this.inQueue.length) {
+			const request = this.inQueue.shift();
+			this.client.send(request.body).then(request.resolve).catch(request.reject);
+		}
 	}
 
 	onData(buffer) {
@@ -129,7 +141,7 @@ class DenonAvrTelnet extends EventEmitter {
 		return this.setRaw(prefix, transformer.into(value));
 	}
 	setRaw(prefix, value) {
-		return this.rawQuery(prefix, value);
+		return this.rawQuery(prefix, value).finally(() => this.sendNext());
 	}
 
 	get(prefix) {
