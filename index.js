@@ -12,22 +12,6 @@ const aliases = {
 	"MV": "Volume",
 };
 
-const onceify = fun => (res, rej) => {
-	const ores = resolution => {
-		if (fun) {
-			fun = null;
-			res(resolution);
-		}
-	};
-	const orej = error => {
-		if (fun) {
-			fun = null;
-			rej(error);
-		}
-	};
-	return fun(ores, orej);
-};
-
 class DenonAvrTelnet extends EventEmitter {
 	/**
 	 * @param {string} host the host to be connected to
