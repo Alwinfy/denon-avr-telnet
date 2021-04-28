@@ -1,6 +1,6 @@
 {
   "name": "denon-avr-telnet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Node API for the Denon AVR Telnet interface",
   "main": "index.js",
   "dependencies": {
