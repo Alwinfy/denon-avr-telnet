@@ -15,10 +15,10 @@ const aliases = {
 class DenonAvrTelnet extends EventEmitter {
 	/**
 	 * @param {string} host the host to be connected to
-	 * @param {number?} port the port to connect to; defaults to 23
+	 * @param {object?} options additional options to pass to the underlying telnet client (see telnet-client doc for options)
 	 * @param {number?} timeout the timeout on requests; set to 0 to disable
 	 */
-	constructor(host, port, timeout) {
+	constructor(host, options, timeout=5000) {
 		super();
 		this.client = new Telnet();
 		this.partial = "";
@@ -26,13 +26,14 @@ class DenonAvrTelnet extends EventEmitter {
 		this.client
 			.connect({
 				host,
-				port: port || 23,
+				port: 23,
 				timeout: 1000,
 				sendTimeout: 1200,
 				negotiationMandatory: false,
 				// timeout: timeout === undefined ? 5000 : timeout,
 				irs: "\r",
-				ors: "\r"
+				ors: "\r",
+				...(options || {})
 			})
 			.then(() => this.emit("connected"));
 		this.queues = {};
